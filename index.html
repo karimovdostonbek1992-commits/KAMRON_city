@@ -1,56 +1,230 @@
-
 <!DOCTYPE html>
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KAMRON - Premium Restoran</title>
+    <title>KAMRON | Premium Restaurant System</title>
+    
+    <!-- Scripts: React, Tailwind, Babel, Lucide Icons -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            scroll-behavior: smooth;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        .fade-up {
-            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #e2e8f0;
-            border-radius: 10px;
-        }
-        .tab-transition {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .expensive-shadow { box-shadow: 0 10px 50px -12px rgba(0, 0, 0, 0.05); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-  }
-}
-</script>
 </head>
-<body class="bg-[#F8FAFC] text-slate-900 overflow-x-hidden">
+<body class="bg-white text-black selection:bg-black selection:text-white">
     <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- MOCK DATA ---
+        const MOCK_PRODUCTS = [
+            { id: 1, name: "Wagyu Steak", price: 450000, category: "Asosiy", image: "https://images.unsplash.com/photo-1546241072-48010ad28c2c?q=80&w=200", status: "bor" },
+            { id: 2, name: "Truffle Pasta", price: 180000, category: "Asosiy", image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=200", status: "bor" },
+            { id: 3, name: "Salmon Tartare", price: 120000, category: "Gazaklar", image: "https://images.unsplash.com/photo-1546039907-7fa05f864c02?q=80&w=200", status: "bor" },
+            { id: 4, name: "Gold Leaf Dessert", price: 300000, category: "Desert", image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?q=80&w=200", status: "yo'q" },
+        ];
+
+        const MOCK_TABLES = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: `${i + 1}-Xona`, status: i % 3 === 0 ? "band" : "bo'sh" }));
+
+        // --- COMPONENTS ---
+
+        const App = () => {
+            const [view, setView] = useState('customer'); // customer, auth1, auth2, panel
+            const [activeRole, setActiveRole] = useState(null); // manager, admin, courier
+            const [cart, setCart] = useState([]);
+            const [products, setProducts] = useState(MOCK_PRODUCTS);
+            const [orders, setOrders] = useState([]);
+            const [authInput, setAuthInput] = useState("");
+            
+            // Stats for Manager
+            const stats = { revenue: "24,500,000", activeOrders: orders.length, logs: [
+                { id: 1, ip: "172.20.10.4", device: "iPhone 15 Pro", time: "12:45", loc: "Toshkent" },
+                { id: 2, ip: "192.168.1.1", device: "MacBook Air", time: "11:20", loc: "Samarqand" }
+            ]};
+
+            const handleGateKeeper = () => {
+                if (authInput === "mx097aixom") {
+                    setView('auth2');
+                    setAuthInput("");
+                } else { alert("Xato!"); }
+            };
+
+            const handleRoleLogin = (role, code) => {
+                const codes = { manager: "189sidnetbosss", admin: "11wer9hk", courier: "buysel78ui" };
+                if (authInput === codes[role]) {
+                    setActiveRole(role);
+                    setView('panel');
+                    setAuthInput("");
+                } else { alert("Parol xato!"); }
+            };
+
+            const addToCart = (p) => {
+                if (p.status === "yo'q") return;
+                setCart([...cart, p]);
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {/* Header */}
+                    <header className="py-8 px-6 md:px-20 flex justify-between items-end border-b border-gray-50">
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-tighter uppercase italic">Kamron</h1>
+                            <p className="text-[10px] text-gray-400 tracking-widest uppercase">Premium Dining Experience</p>
+                        </div>
+                        <nav className="flex space-x-8 text-xs font-medium uppercase tracking-widest">
+                            <button onClick={() => setView('customer')} className={view === 'customer' ? "text-black" : "text-gray-300"}>Menyu</button>
+                            <button className="text-gray-300">Rezervatsiya</button>
+                        </nav>
+                    </header>
+
+                    <main className="flex-grow p-6 md:px-20 py-12 fade-in">
+                        {view === 'customer' && <CustomerView products={products} addToCart={addToCart} cart={cart} />}
+                        {view === 'auth1' && <div className="max-w-xs mx-auto py-40 text-center">
+                            <input type="password" placeholder="Gate Code" className="w-full border-b border-black py-2 outline-none mb-4 text-center" onChange={e => setAuthInput(e.target.value)} />
+                            <button onClick={handleGateKeeper} className="text-[10px] uppercase tracking-widest font-bold">Tasdiqlash</button>
+                        </div>}
+                        {view === 'auth2' && <div className="max-w-xs mx-auto py-32 text-center">
+                            <select className="w-full border-b border-black py-2 mb-4 bg-transparent outline-none uppercase text-[10px] tracking-widest" id="roleSelect">
+                                <option value="manager">Boshliq</option>
+                                <option value="admin">Admin</option>
+                                <option value="courier">Kuryer</option>
+                            </select>
+                            <input type="password" placeholder="Shaxsiy Parol" className="w-full border-b border-black py-2 outline-none mb-6 text-center text-xs" onChange={e => setAuthInput(e.target.value)} />
+                            <button onClick={() => handleRoleLogin(document.getElementById('roleSelect').value)} className="text-[10px] uppercase tracking-widest font-bold bg-black text-white px-8 py-3">Kirish</button>
+                        </div>}
+                        {view === 'panel' && <AdminPanels role={activeRole} stats={stats} products={products} setProducts={setProducts} setView={setView} />}
+                    </main>
+
+                    {/* Footer - Invisible Secret Button */}
+                    <footer className="p-4 flex justify-between items-center opacity-20 hover:opacity-100 transition-opacity">
+                        <p className="text-[9px] text-gray-400">© 2024 KAMRON RESTAURANT GROUP</p>
+                        <button onClick={() => setView('auth1')} className="w-2 h-2 bg-gray-100 rounded-full cursor-default"></button>
+                    </footer>
+                </div>
+            );
+        };
+
+        const CustomerView = ({ products, addToCart, cart }) => (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
+                <div className="md:col-span-8">
+                    <h2 className="text-sm font-bold uppercase tracking-[0.2em] mb-12 border-l-2 border-black pl-4">Menyu</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-16">
+                        {products.map(p => (
+                            <div key={p.id} className="group cursor-pointer" onClick={() => addToCart(p)}>
+                                <div className="overflow-hidden bg-gray-50 mb-4 aspect-[4/3]">
+                                    <img src={p.image} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110" />
+                                </div>
+                                <div className="flex justify-between items-end">
+                                    <div>
+                                        <p className="text-[10px] uppercase text-gray-400 mb-1">{p.category}</p>
+                                        <h3 className="text-sm font-medium">{p.name}</h3>
+                                    </div>
+                                    <p className="text-xs font-bold">{p.price.toLocaleString()} UZS</p>
+                                </div>
+                                {p.status === "yo'q" && <p className="text-[9px] text-red-500 uppercase mt-2">Tugagan</p>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="md:col-span-4 bg-gray-50 p-8 h-fit expensive-shadow">
+                    <h2 className="text-xs font-bold uppercase tracking-widest mb-8">Savatcha ({cart.length})</h2>
+                    {cart.map((item, i) => (
+                        <div key={i} className="flex justify-between text-xs py-2 border-b border-gray-100 italic">
+                            <span>{item.name}</span>
+                            <span>{item.price.toLocaleString()}</span>
+                        </div>
+                    ))}
+                    <div className="mt-8 pt-4 border-t border-black flex justify-between font-bold text-sm uppercase">
+                        <span>Jami</span>
+                        <span>{cart.reduce((a, b) => a + b.price, 0).toLocaleString()} UZS</span>
+                    </div>
+                    <button className="w-full bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] py-4 mt-8 hover:bg-zinc-800 transition-colors">Buyurtma berish</button>
+                </div>
+            </div>
+        );
+
+        const AdminPanels = ({ role, stats, products, setProducts, setView }) => {
+            const updateStatus = (id) => {
+                setProducts(products.map(p => p.id === id ? { ...p, status: p.status === 'bor' ? "yo'q" : 'bor' } : p));
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex justify-between items-center mb-12 border-b pb-4">
+                        <h2 className="text-xs font-black uppercase tracking-[0.5em]">{role} paneli</h2>
+                        <button onClick={() => setView('customer')} className="text-[10px] text-red-500 font-bold uppercase italic">Chiqish</button>
+                    </div>
+
+                    {role === 'manager' && <div className="space-y-12">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-8 border border-gray-100">
+                                <p className="text-[10px] uppercase text-gray-400 mb-2">Kunlik Tushum</p>
+                                <p className="text-2xl font-light">{stats.revenue} UZS</p>
+                            </div>
+                            <div className="p-8 border border-gray-100">
+                                <p className="text-[10px] uppercase text-gray-400 mb-2">Faol Buyurtmalar</p>
+                                <p className="text-2xl font-light">{stats.activeOrders}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase font-bold mb-4">Kirish Loglari (IP)</p>
+                            <div className="space-y-2">
+                                {stats.logs.map(log => (
+                                    <div key={log.id} className="text-[10px] flex justify-between p-3 bg-gray-50 font-mono">
+                                        <span>{log.ip} — {log.device}</span>
+                                        <span className="text-gray-400">{log.loc} | {log.time}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>}
+
+                    {role === 'admin' && <div className="space-y-6">
+                        {products.map(p => (
+                            <div key={p.id} className="flex items-center justify-between p-4 border border-gray-100 hover:border-black transition-colors">
+                                <div className="flex items-center space-x-4">
+                                    <img src={p.image} className="w-10 h-10 object-cover grayscale" />
+                                    <div>
+                                        <h4 className="text-xs font-bold">{p.name}</h4>
+                                        <p className="text-[10px] text-gray-400">{p.price.toLocaleString()} UZS</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => updateStatus(p.id)} className={`text-[9px] uppercase font-bold px-4 py-2 ${p.status === 'bor' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
+                                    {p.status === 'bor' ? "Sotuvda" : "To'xtatilgan"}
+                                </button>
+                            </div>
+                        ))}
+                    </div>}
+
+                    {role === 'courier' && <div className="space-y-4">
+                        <p className="text-[10px] uppercase text-gray-400 italic mb-8 italic">Faqat yetkazib berish buyurtmalari ko'rinadi</p>
+                        <div className="border border-black p-6">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <p className="text-xs font-bold uppercase">#ORD-7721</p>
+                                    <p className="text-[10px] text-gray-500">Mijoz: Kamron | Manzil: Sergeli 7-42</p>
+                                </div>
+                                <span className="text-[9px] bg-yellow-100 px-2 py-1 uppercase font-bold tracking-tighter">Yo'lda</span>
+                            </div>
+                            <button className="w-full border border-black py-2 text-[10px] font-bold uppercase hover:bg-black hover:text-white transition-all">Yakunlash</button>
+                        </div>
+                    </div>}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
