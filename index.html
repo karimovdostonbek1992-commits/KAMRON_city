@@ -3,222 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KAMRON | Premium Restaurant System</title>
+    <title>KAMRON | Private Dining System</title>
     
-    <!-- Scripts: React, Tailwind, Babel, Lucide Icons -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .expensive-shadow { box-shadow: 0 10px 50px -12px rgba(0, 0, 0, 0.05); }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #0a0a0a; /* To'q qora fon */
+            color: #ffffff;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .product-card:hover img {
+            transform: scale(1.05);
+        }
+        .gold-gradient {
+            background: linear-gradient(90deg, #d4af37, #f2d06b, #d4af37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-premium {
+            background: #ffffff;
+            color: #000000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-premium:hover {
+            background: #d4af37;
+            transform: translateY(-2px);
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-white text-black selection:bg-black selection:text-white">
+<body class="selection:bg-yellow-500 selection:text-black">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect } = React;
 
-        // --- MOCK DATA ---
+        const CODES = { GATE: "mx097aixom", MANAGER: "189sidnetbosss", ADMIN: "11wer9hk", COURIER: "buysel78ui" };
+
         const MOCK_PRODUCTS = [
-            { id: 1, name: "Wagyu Steak", price: 450000, category: "Asosiy", image: "https://images.unsplash.com/photo-1546241072-48010ad28c2c?q=80&w=200", status: "bor" },
-            { id: 2, name: "Truffle Pasta", price: 180000, category: "Asosiy", image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=200", status: "bor" },
-            { id: 3, name: "Salmon Tartare", price: 120000, category: "Gazaklar", image: "https://images.unsplash.com/photo-1546039907-7fa05f864c02?q=80&w=200", status: "bor" },
-            { id: 4, name: "Gold Leaf Dessert", price: 300000, category: "Desert", image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?q=80&w=200", status: "yo'q" },
+            { id: 1, name: "Wagyu A5 Fillet", price: 850000, category: "Premium Steak", image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600", status: "bor" },
+            { id: 2, name: "Black Caviar Pasta", price: 420000, category: "Seafood", image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?q=80&w=600", status: "bor" },
+            { id: 3, name: "Lobster Tail", price: 650000, category: "Seafood", image: "https://images.unsplash.com/photo-1559715745-e1b33a271c8f?q=80&w=600", status: "bor" },
+            { id: 4, name: "Truffle Risotto", price: 290000, category: "Vegetarian", image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?q=80&w=600", status: "yo'q" },
         ];
 
-        const MOCK_TABLES = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: `${i + 1}-Xona`, status: i % 3 === 0 ? "band" : "bo'sh" }));
-
-        // --- COMPONENTS ---
-
         const App = () => {
-            const [view, setView] = useState('customer'); // customer, auth1, auth2, panel
-            const [activeRole, setActiveRole] = useState(null); // manager, admin, courier
+            const [view, setView] = useState('customer');
+            const [activeRole, setActiveRole] = useState(null);
             const [cart, setCart] = useState([]);
-            const [products, setProducts] = useState(MOCK_PRODUCTS);
-            const [orders, setOrders] = useState([]);
             const [authInput, setAuthInput] = useState("");
-            
-            // Stats for Manager
-            const stats = { revenue: "24,500,000", activeOrders: orders.length, logs: [
-                { id: 1, ip: "172.20.10.4", device: "iPhone 15 Pro", time: "12:45", loc: "Toshkent" },
-                { id: 2, ip: "192.168.1.1", device: "MacBook Air", time: "11:20", loc: "Samarqand" }
-            ]};
 
-            const handleGateKeeper = () => {
-                if (authInput === "mx097aixom") {
-                    setView('auth2');
-                    setAuthInput("");
-                } else { alert("Xato!"); }
-            };
-
-            const handleRoleLogin = (role, code) => {
-                const codes = { manager: "189sidnetbosss", admin: "11wer9hk", courier: "buysel78ui" };
-                if (authInput === codes[role]) {
-                    setActiveRole(role);
-                    setView('panel');
-                    setAuthInput("");
-                } else { alert("Parol xato!"); }
-            };
-
-            const addToCart = (p) => {
-                if (p.status === "yo'q") return;
-                setCart([...cart, p]);
-            };
+            const addToCart = (p) => { if (p.status === "bor") setCart([...cart, p]); };
 
             return (
-                <div className="min-h-screen flex flex-col">
-                    {/* Header */}
-                    <header className="py-8 px-6 md:px-20 flex justify-between items-end border-b border-gray-50">
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tighter uppercase italic">Kamron</h1>
-                            <p className="text-[10px] text-gray-400 tracking-widest uppercase">Premium Dining Experience</p>
+                <div className="min-h-screen">
+                    {/* Navigation */}
+                    <nav className="fixed top-0 w-full z-50 px-6 py-8 md:px-20 flex justify-between items-center bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/5">
+                        <div className="group cursor-pointer">
+                            <h1 className="text-3xl font-extrabold tracking-tighter uppercase italic gold-gradient">Kamron</h1>
+                            <p className="text-[8px] tracking-[0.5em] text-gray-500 uppercase">Haute Cuisine</p>
                         </div>
-                        <nav className="flex space-x-8 text-xs font-medium uppercase tracking-widest">
-                            <button onClick={() => setView('customer')} className={view === 'customer' ? "text-black" : "text-gray-300"}>Menyu</button>
-                            <button className="text-gray-300">Rezervatsiya</button>
-                        </nav>
-                    </header>
+                        
+                        <div className="flex space-x-12 items-center">
+                            <button onClick={() => setView('customer')} className={`text-[10px] font-bold uppercase tracking-widest ${view === 'customer' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Menyu</button>
+                            <div className="h-4 w-[1px] bg-white/10"></div>
+                            <div className="relative group">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest cursor-not-allowed">Rezervatsiya</span>
+                            </div>
+                        </div>
+                    </nav>
 
-                    <main className="flex-grow p-6 md:px-20 py-12 fade-in">
-                        {view === 'customer' && <CustomerView products={products} addToCart={addToCart} cart={cart} />}
-                        {view === 'auth1' && <div className="max-w-xs mx-auto py-40 text-center">
-                            <input type="password" placeholder="Gate Code" className="w-full border-b border-black py-2 outline-none mb-4 text-center" onChange={e => setAuthInput(e.target.value)} />
-                            <button onClick={handleGateKeeper} className="text-[10px] uppercase tracking-widest font-bold">Tasdiqlash</button>
-                        </div>}
-                        {view === 'auth2' && <div className="max-w-xs mx-auto py-32 text-center">
-                            <select className="w-full border-b border-black py-2 mb-4 bg-transparent outline-none uppercase text-[10px] tracking-widest" id="roleSelect">
-                                <option value="manager">Boshliq</option>
-                                <option value="admin">Admin</option>
-                                <option value="courier">Kuryer</option>
-                            </select>
-                            <input type="password" placeholder="Shaxsiy Parol" className="w-full border-b border-black py-2 outline-none mb-6 text-center text-xs" onChange={e => setAuthInput(e.target.value)} />
-                            <button onClick={() => handleRoleLogin(document.getElementById('roleSelect').value)} className="text-[10px] uppercase tracking-widest font-bold bg-black text-white px-8 py-3">Kirish</button>
-                        </div>}
-                        {view === 'panel' && <AdminPanels role={activeRole} stats={stats} products={products} setProducts={setProducts} setView={setView} />}
+                    <main className="pt-32 pb-20 px-6 md:px-20 animate-fade-in">
+                        {view === 'customer' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                                {/* Products List */}
+                                <div className="lg:col-span-8 space-y-16">
+                                    <header>
+                                        <h2 className="text-5xl font-light mb-2">Tanlangan <span className="italic font-serif">ne'matlar</span></h2>
+                                        <p className="text-gray-500 text-sm tracking-wide">Faqat eng sara va yangi mahsulotlardan tayyorlangan.</p>
+                                    </header>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                        {MOCK_PRODUCTS.map(p => (
+                                            <div key={p.id} onClick={() => addToCart(p)} className="product-card group cursor-pointer space-y-4">
+                                                <div className="aspect-[16/10] overflow-hidden bg-zinc-900 rounded-sm relative">
+                                                    <img src={p.image} className={`w-full h-full object-cover transition-transform duration-700 ${p.status === 'yo\'q' ? 'opacity-20 grayscale' : 'opacity-80 group-hover:opacity-100'}`} />
+                                                    {p.status === 'yo\'q' && <div className="absolute inset-0 flex items-center justify-center font-bold uppercase text-[10px] tracking-widest text-white/40">Sotuvda mavjud emas</div>}
+                                                </div>
+                                                <div className="flex justify-between items-start pt-2">
+                                                    <div>
+                                                        <span className="text-[9px] uppercase tracking-widest text-yellow-600 mb-1 block">{p.category}</span>
+                                                        <h3 className="text-lg font-medium group-hover:text-yellow-500 transition-colors">{p.name}</h3>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-lg font-light tracking-tighter italic">{p.price.toLocaleString()} <span className="text-[10px] uppercase not-italic opacity-50 text-xs">UZS</span></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Sidebar Cart */}
+                                <div className="lg:col-span-4">
+                                    <div className="glass p-10 rounded-sm sticky top-40 space-y-10">
+                                        <div className="flex justify-between items-center">
+                                            <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Savatcha</h3>
+                                            <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full font-mono">{cart.length}</span>
+                                        </div>
+
+                                        <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2">
+                                            {cart.map((item, i) => (
+                                                <div key={i} className="flex justify-between items-center animate-fade-in border-b border-white/5 pb-4">
+                                                    <span className="text-sm font-light italic">{item.name}</span>
+                                                    <span className="text-sm font-mono">{item.price.toLocaleString()}</span>
+                                                </div>
+                                            ))}
+                                            {cart.length === 0 && <p className="text-gray-600 text-[11px] italic text-center py-10">Hali hech narsa tanlanmadi</p>}
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-baseline border-t border-white/10 pt-6">
+                                                <span className="text-[10px] uppercase font-bold tracking-widest text-gray-500">Jami summa</span>
+                                                <span className="text-2xl font-bold tracking-tighter text-yellow-500">{cart.reduce((a,b)=>a+b.price, 0).toLocaleString()} <small className="text-[10px]">UZS</small></span>
+                                            </div>
+                                            <button className="w-full btn-premium py-5 text-[10px] font-black uppercase tracking-[0.4em] active:scale-95">Tasdiqlash</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Login Modals - Glassmorphism style */}
+                        {(view === 'auth_gate' || view === 'auth_role') && (
+                            <div className="max-w-md mx-auto py-20 animate-fade-in text-center space-y-12">
+                                <h2 className="text-xs font-bold uppercase tracking-[0.5em] text-yellow-600 italic">Security Protocol</h2>
+                                <div className="glass p-12 rounded-lg space-y-8">
+                                    <input 
+                                        type="password" 
+                                        placeholder={view === 'auth_gate' ? "ACCESS CODE" : "SECRET PASSWORD"}
+                                        className="w-full bg-transparent border-b border-white/10 py-4 text-center text-xl font-light outline-none focus:border-yellow-600 transition-colors"
+                                        onKeyPress={e => {
+                                            if(e.key === 'Enter') {
+                                                if(view === 'auth_gate') {
+                                                    if(e.target.value === CODES.GATE) setView('auth_role');
+                                                    else alert('Kod xato');
+                                                } else {
+                                                    // Soddalashtirilgan login
+                                                    if(Object.values(CODES).includes(e.target.value)) {
+                                                        setActiveRole('manager'); setView('panel');
+                                                    } else alert('Parol xato');
+                                                }
+                                                e.target.value = "";
+                                            }
+                                        }}
+                                    />
+                                    <p className="text-[9px] text-gray-600 uppercase tracking-widest">Kirish uchun parolni kiritib Enterni bosing</p>
+                                </div>
+                                <button onClick={() => setView('customer')} className="text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors">← Orqaga</button>
+                            </div>
+                        )}
+
+                        {/* Panel View */}
+                        {view === 'panel' && (
+                            <div className="space-y-12 animate-fade-in max-w-6xl mx-auto">
+                                <header className="flex justify-between items-end border-b border-white/10 pb-8">
+                                    <h2 className="text-3xl font-light uppercase tracking-tighter italic">{activeRole} <span className="text-gray-600">Control</span></h2>
+                                    <button onClick={() => setView('customer')} className="text-[10px] text-red-500 font-bold border border-red-500/20 px-6 py-2 hover:bg-red-500 hover:text-white transition-all">EXIT</button>
+                                </header>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                                    <div className="glass p-10"><p className="text-[10px] text-gray-500 mb-2 uppercase tracking-widest font-bold">Today Revenue</p><p className="text-3xl font-bold text-yellow-500 italic">24,500,000</p></div>
+                                    <div className="glass p-10"><p className="text-[10px] text-gray-500 mb-2 uppercase tracking-widest font-bold">Active Guests</p><p className="text-3xl font-bold italic">14</p></div>
+                                    <div className="glass p-10"><p className="text-[10px] text-gray-500 mb-2 uppercase tracking-widest font-bold">New Orders</p><p className="text-3xl font-bold italic">03</p></div>
+                                </div>
+                            </div>
+                        )}
                     </main>
 
-                    {/* Footer - Invisible Secret Button */}
-                    <footer className="p-4 flex justify-between items-center opacity-20 hover:opacity-100 transition-opacity">
-                        <p className="text-[9px] text-gray-400">© 2024 KAMRON RESTAURANT GROUP</p>
-                        <button onClick={() => setView('auth1')} className="w-2 h-2 bg-gray-100 rounded-full cursor-default"></button>
+                    {/* Footer & Secret Gate */}
+                    <footer className="px-6 py-10 md:px-20 border-t border-white/5 flex justify-between items-center text-gray-700">
+                        <p className="text-[9px] tracking-widest uppercase italic">© 2026 Kamron Private Dining</p>
+                        <div onClick={() => setView('auth_gate')} className="w-1 h-1 bg-white/5 cursor-pointer hover:bg-yellow-600 transition-colors"></div>
                     </footer>
-                </div>
-            );
-        };
-
-        const CustomerView = ({ products, addToCart, cart }) => (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-                <div className="md:col-span-8">
-                    <h2 className="text-sm font-bold uppercase tracking-[0.2em] mb-12 border-l-2 border-black pl-4">Menyu</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-16">
-                        {products.map(p => (
-                            <div key={p.id} className="group cursor-pointer" onClick={() => addToCart(p)}>
-                                <div className="overflow-hidden bg-gray-50 mb-4 aspect-[4/3]">
-                                    <img src={p.image} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110" />
-                                </div>
-                                <div className="flex justify-between items-end">
-                                    <div>
-                                        <p className="text-[10px] uppercase text-gray-400 mb-1">{p.category}</p>
-                                        <h3 className="text-sm font-medium">{p.name}</h3>
-                                    </div>
-                                    <p className="text-xs font-bold">{p.price.toLocaleString()} UZS</p>
-                                </div>
-                                {p.status === "yo'q" && <p className="text-[9px] text-red-500 uppercase mt-2">Tugagan</p>}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="md:col-span-4 bg-gray-50 p-8 h-fit expensive-shadow">
-                    <h2 className="text-xs font-bold uppercase tracking-widest mb-8">Savatcha ({cart.length})</h2>
-                    {cart.map((item, i) => (
-                        <div key={i} className="flex justify-between text-xs py-2 border-b border-gray-100 italic">
-                            <span>{item.name}</span>
-                            <span>{item.price.toLocaleString()}</span>
-                        </div>
-                    ))}
-                    <div className="mt-8 pt-4 border-t border-black flex justify-between font-bold text-sm uppercase">
-                        <span>Jami</span>
-                        <span>{cart.reduce((a, b) => a + b.price, 0).toLocaleString()} UZS</span>
-                    </div>
-                    <button className="w-full bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] py-4 mt-8 hover:bg-zinc-800 transition-colors">Buyurtma berish</button>
-                </div>
-            </div>
-        );
-
-        const AdminPanels = ({ role, stats, products, setProducts, setView }) => {
-            const updateStatus = (id) => {
-                setProducts(products.map(p => p.id === id ? { ...p, status: p.status === 'bor' ? "yo'q" : 'bor' } : p));
-            };
-
-            return (
-                <div className="max-w-4xl mx-auto">
-                    <div className="flex justify-between items-center mb-12 border-b pb-4">
-                        <h2 className="text-xs font-black uppercase tracking-[0.5em]">{role} paneli</h2>
-                        <button onClick={() => setView('customer')} className="text-[10px] text-red-500 font-bold uppercase italic">Chiqish</button>
-                    </div>
-
-                    {role === 'manager' && <div className="space-y-12">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-8 border border-gray-100">
-                                <p className="text-[10px] uppercase text-gray-400 mb-2">Kunlik Tushum</p>
-                                <p className="text-2xl font-light">{stats.revenue} UZS</p>
-                            </div>
-                            <div className="p-8 border border-gray-100">
-                                <p className="text-[10px] uppercase text-gray-400 mb-2">Faol Buyurtmalar</p>
-                                <p className="text-2xl font-light">{stats.activeOrders}</p>
-                            </div>
-                        </div>
-                        <div>
-                            <p className="text-[10px] uppercase font-bold mb-4">Kirish Loglari (IP)</p>
-                            <div className="space-y-2">
-                                {stats.logs.map(log => (
-                                    <div key={log.id} className="text-[10px] flex justify-between p-3 bg-gray-50 font-mono">
-                                        <span>{log.ip} — {log.device}</span>
-                                        <span className="text-gray-400">{log.loc} | {log.time}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>}
-
-                    {role === 'admin' && <div className="space-y-6">
-                        {products.map(p => (
-                            <div key={p.id} className="flex items-center justify-between p-4 border border-gray-100 hover:border-black transition-colors">
-                                <div className="flex items-center space-x-4">
-                                    <img src={p.image} className="w-10 h-10 object-cover grayscale" />
-                                    <div>
-                                        <h4 className="text-xs font-bold">{p.name}</h4>
-                                        <p className="text-[10px] text-gray-400">{p.price.toLocaleString()} UZS</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => updateStatus(p.id)} className={`text-[9px] uppercase font-bold px-4 py-2 ${p.status === 'bor' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
-                                    {p.status === 'bor' ? "Sotuvda" : "To'xtatilgan"}
-                                </button>
-                            </div>
-                        ))}
-                    </div>}
-
-                    {role === 'courier' && <div className="space-y-4">
-                        <p className="text-[10px] uppercase text-gray-400 italic mb-8 italic">Faqat yetkazib berish buyurtmalari ko'rinadi</p>
-                        <div className="border border-black p-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <p className="text-xs font-bold uppercase">#ORD-7721</p>
-                                    <p className="text-[10px] text-gray-500">Mijoz: Kamron | Manzil: Sergeli 7-42</p>
-                                </div>
-                                <span className="text-[9px] bg-yellow-100 px-2 py-1 uppercase font-bold tracking-tighter">Yo'lda</span>
-                            </div>
-                            <button className="w-full border border-black py-2 text-[10px] font-bold uppercase hover:bg-black hover:text-white transition-all">Yakunlash</button>
-                        </div>
-                    </div>}
                 </div>
             );
         };
