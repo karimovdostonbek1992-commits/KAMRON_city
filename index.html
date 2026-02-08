@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KAMRON | Private Dining System</title>
+    <title>KAMRON | Premium Dining System</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -14,42 +14,58 @@
     <style>
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #0a0a0a; /* To'q qora fon */
+            background-color: #0a0a0a; 
             color: #ffffff;
         }
         .glass {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .product-card:hover img {
-            transform: scale(1.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .gold-gradient {
             background: linear-gradient(90deg, #d4af37, #f2d06b, #d4af37);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .btn-premium {
-            background: #ffffff;
-            color: #000000;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .input-premium {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 100%;
+            outline: none;
+            transition: all 0.3s;
         }
-        .btn-premium:hover {
+        .input-premium:focus {
+            border-color: #d4af37;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .btn-gold {
             background: #d4af37;
+            color: black;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        .btn-gold:hover:not(:disabled) {
+            background: #f2d06b;
             transform: translateY(-2px);
         }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .btn-gold:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
     </style>
 </head>
-<body class="selection:bg-yellow-500 selection:text-black">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        const CODES = { GATE: "mx097aixom", MANAGER: "189sidnetbosss", ADMIN: "11wer9hk", COURIER: "buysel78ui" };
+        const { useState } = React;
 
         const MOCK_PRODUCTS = [
             { id: 1, name: "Wagyu A5 Fillet", price: 850000, category: "Premium Steak", image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600", status: "bor" },
@@ -60,142 +76,119 @@
 
         const App = () => {
             const [view, setView] = useState('customer');
-            const [activeRole, setActiveRole] = useState(null);
             const [cart, setCart] = useState([]);
-            const [authInput, setAuthInput] = useState("");
+            
+            // Buyurtmachi ma'lumotlari
+            const [customer, setCustomer] = useState({
+                name: '',
+                phone: '',
+                address: ''
+            });
 
             const addToCart = (p) => { if (p.status === "bor") setCart([...cart, p]); };
+            
+            const totalSum = cart.reduce((a, b) => a + b.price, 0);
+
+            const handleCheckout = () => {
+                if (!customer.name || !customer.phone || !customer.address) {
+                    alert("Iltimos, yetkazib berish ma'lumotlarini to'liq to'ldiring!");
+                    return;
+                }
+                alert(`Rahmat, ${customer.name}! Buyurtmangiz qabul qilindi. Tez orada bog'lanamiz.`);
+                setCart([]);
+                setCustomer({ name: '', phone: '', address: '' });
+            };
 
             return (
                 <div className="min-h-screen">
-                    {/* Navigation */}
-                    <nav className="fixed top-0 w-full z-50 px-6 py-8 md:px-20 flex justify-between items-center bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/5">
-                        <div className="group cursor-pointer">
-                            <h1 className="text-3xl font-extrabold tracking-tighter uppercase italic gold-gradient">Kamron</h1>
-                            <p className="text-[8px] tracking-[0.5em] text-gray-500 uppercase">Haute Cuisine</p>
+                    <nav className="fixed top-0 w-full z-50 px-6 py-8 md:px-20 flex justify-between items-center bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
+                        <div>
+                            <h1 className="text-2xl font-black uppercase italic gold-gradient tracking-tighter">Kamron</h1>
                         </div>
-                        
-                        <div className="flex space-x-12 items-center">
-                            <button onClick={() => setView('customer')} className={`text-[10px] font-bold uppercase tracking-widest ${view === 'customer' ? 'text-white' : 'text-gray-500 hover:text-white'}`}>Menyu</button>
-                            <div className="h-4 w-[1px] bg-white/10"></div>
-                            <div className="relative group">
-                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest cursor-not-allowed">Rezervatsiya</span>
-                            </div>
-                        </div>
+                        <button onClick={() => setView('customer')} className="text-[10px] font-bold uppercase tracking-widest text-white border-b border-yellow-600">Menyu</button>
                     </nav>
 
-                    <main className="pt-32 pb-20 px-6 md:px-20 animate-fade-in">
-                        {view === 'customer' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                                {/* Products List */}
-                                <div className="lg:col-span-8 space-y-16">
-                                    <header>
-                                        <h2 className="text-5xl font-light mb-2">Tanlangan <span className="italic font-serif">ne'matlar</span></h2>
-                                        <p className="text-gray-500 text-sm tracking-wide">Faqat eng sara va yangi mahsulotlardan tayyorlangan.</p>
-                                    </header>
+                    <main className="pt-32 pb-20 px-6 md:px-20">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                            {/* Menyu qismi */}
+                            <div className="lg:col-span-7 space-y-12">
+                                <h2 className="text-4xl font-light italic">Eksklyuziv <span className="text-gray-500 font-sans not-italic">Menyu</span></h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {MOCK_PRODUCTS.map(p => (
+                                        <div key={p.id} onClick={() => addToCart(p)} className="group cursor-pointer">
+                                            <div className="aspect-video overflow-hidden rounded-sm bg-zinc-900 mb-4 border border-white/5">
+                                                <img src={p.image} className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${p.status === 'yo\'q' ? 'opacity-20' : 'opacity-70 group-hover:opacity-100'}`} />
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <h3 className="text-sm font-medium">{p.name}</h3>
+                                                <span className="text-sm font-light italic text-yellow-500">{p.price.toLocaleString()} UZS</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                        {MOCK_PRODUCTS.map(p => (
-                                            <div key={p.id} onClick={() => addToCart(p)} className="product-card group cursor-pointer space-y-4">
-                                                <div className="aspect-[16/10] overflow-hidden bg-zinc-900 rounded-sm relative">
-                                                    <img src={p.image} className={`w-full h-full object-cover transition-transform duration-700 ${p.status === 'yo\'q' ? 'opacity-20 grayscale' : 'opacity-80 group-hover:opacity-100'}`} />
-                                                    {p.status === 'yo\'q' && <div className="absolute inset-0 flex items-center justify-center font-bold uppercase text-[10px] tracking-widest text-white/40">Sotuvda mavjud emas</div>}
-                                                </div>
-                                                <div className="flex justify-between items-start pt-2">
-                                                    <div>
-                                                        <span className="text-[9px] uppercase tracking-widest text-yellow-600 mb-1 block">{p.category}</span>
-                                                        <h3 className="text-lg font-medium group-hover:text-yellow-500 transition-colors">{p.name}</h3>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="text-lg font-light tracking-tighter italic">{p.price.toLocaleString()} <span className="text-[10px] uppercase not-italic opacity-50 text-xs">UZS</span></p>
-                                                    </div>
-                                                </div>
+                            {/* Savatcha va Buyurtma Formasi */}
+                            <div className="lg:col-span-5">
+                                <div className="glass p-8 rounded-sm sticky top-32 space-y-8">
+                                    <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-yellow-600 border-b border-white/10 pb-4">Sizning Buyurtmangiz</h3>
+                                    
+                                    {/* Tanlangan mahsulotlar ro'yxati */}
+                                    <div className="space-y-4 max-h-40 overflow-y-auto pr-2">
+                                        {cart.map((item, i) => (
+                                            <div key={i} className="flex justify-between text-[13px] font-light">
+                                                <span>{item.name}</span>
+                                                <span className="text-gray-500">{item.price.toLocaleString()}</span>
                                             </div>
                                         ))}
+                                        {cart.length === 0 && <p className="text-gray-600 text-xs italic text-center py-4">Savatcha bo'sh</p>}
                                     </div>
-                                </div>
 
-                                {/* Sidebar Cart */}
-                                <div className="lg:col-span-4">
-                                    <div className="glass p-10 rounded-sm sticky top-40 space-y-10">
-                                        <div className="flex justify-between items-center">
-                                            <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Savatcha</h3>
-                                            <span className="text-[10px] bg-white/10 px-2 py-1 rounded-full font-mono">{cart.length}</span>
-                                        </div>
-
-                                        <div className="space-y-6 max-h-[300px] overflow-y-auto pr-2">
-                                            {cart.map((item, i) => (
-                                                <div key={i} className="flex justify-between items-center animate-fade-in border-b border-white/5 pb-4">
-                                                    <span className="text-sm font-light italic">{item.name}</span>
-                                                    <span className="text-sm font-mono">{item.price.toLocaleString()}</span>
-                                                </div>
-                                            ))}
-                                            {cart.length === 0 && <p className="text-gray-600 text-[11px] italic text-center py-10">Hali hech narsa tanlanmadi</p>}
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-baseline border-t border-white/10 pt-6">
-                                                <span className="text-[10px] uppercase font-bold tracking-widest text-gray-500">Jami summa</span>
-                                                <span className="text-2xl font-bold tracking-tighter text-yellow-500">{cart.reduce((a,b)=>a+b.price, 0).toLocaleString()} <small className="text-[10px]">UZS</small></span>
-                                            </div>
-                                            <button className="w-full btn-premium py-5 text-[10px] font-black uppercase tracking-[0.4em] active:scale-95">Tasdiqlash</button>
-                                        </div>
+                                    {/* Mijoz ma'lumotlari formasi */}
+                                    <div className="space-y-4 pt-4 border-t border-white/5">
+                                        <p className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Yetkazib berish ma'lumotlari</p>
+                                        <input 
+                                            type="text" 
+                                            placeholder="To'liq ismingiz" 
+                                            className="input-premium"
+                                            value={customer.name}
+                                            onChange={e => setCustomer({...customer, name: e.target.value})}
+                                        />
+                                        <input 
+                                            type="tel" 
+                                            placeholder="Telefon raqamingiz (+998...)" 
+                                            className="input-premium"
+                                            value={customer.phone}
+                                            onChange={e => setCustomer({...customer, phone: e.target.value})}
+                                        />
+                                        <textarea 
+                                            placeholder="Manzil (Ko'cha, uy, kvartira)" 
+                                            className="input-premium h-20 resize-none"
+                                            value={customer.address}
+                                            onChange={e => setCustomer({...customer, address: e.target.value})}
+                                        ></textarea>
                                     </div>
-                                </div>
-                            </div>
-                        )}
 
-                        {/* Login Modals - Glassmorphism style */}
-                        {(view === 'auth_gate' || view === 'auth_role') && (
-                            <div className="max-w-md mx-auto py-20 animate-fade-in text-center space-y-12">
-                                <h2 className="text-xs font-bold uppercase tracking-[0.5em] text-yellow-600 italic">Security Protocol</h2>
-                                <div className="glass p-12 rounded-lg space-y-8">
-                                    <input 
-                                        type="password" 
-                                        placeholder={view === 'auth_gate' ? "ACCESS CODE" : "SECRET PASSWORD"}
-                                        className="w-full bg-transparent border-b border-white/10 py-4 text-center text-xl font-light outline-none focus:border-yellow-600 transition-colors"
-                                        onKeyPress={e => {
-                                            if(e.key === 'Enter') {
-                                                if(view === 'auth_gate') {
-                                                    if(e.target.value === CODES.GATE) setView('auth_role');
-                                                    else alert('Kod xato');
-                                                } else {
-                                                    // Soddalashtirilgan login
-                                                    if(Object.values(CODES).includes(e.target.value)) {
-                                                        setActiveRole('manager'); setView('panel');
-                                                    } else alert('Parol xato');
-                                                }
-                                                e.target.value = "";
-                                            }
-                                        }}
-                                    />
-                                    <p className="text-[9px] text-gray-600 uppercase tracking-widest">Kirish uchun parolni kiritib Enterni bosing</p>
-                                </div>
-                                <button onClick={() => setView('customer')} className="text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors">← Orqaga</button>
-                            </div>
-                        )}
+                                    <div className="pt-6 border-t border-white/10 flex justify-between items-end">
+                                        <span className="text-[10px] uppercase font-bold text-gray-500">Jami:</span>
+                                        <span className="text-2xl font-bold text-yellow-500">{totalSum.toLocaleString()} <small className="text-xs uppercase">uzs</small></span>
+                                    </div>
 
-                        {/* Panel View */}
-                        {view === 'panel' && (
-                            <div className="space-y-12 animate-fade-in max-w-6xl mx-auto">
-                                <header className="flex justify-between items-end border-b border-white/10 pb-8">
-                                    <h2 className="text-3xl font-light uppercase tracking-tighter italic">{activeRole} <span className="text-gray-600">Control</span></h2>
-                                    <button onClick={() => setView('customer')} className="text-[10px] text-red-500 font-bold border border-red-500/20 px-6 py-2 hover:bg-red-500 hover:text-white transition-all">EXIT</button>
-                                </header>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                                    <div className="glass p-10"><p className="text-[10px] text-gray-500 mb-2 uppercase tracking-widest font-bold">Today Revenue</p><p className="text-3xl font-bold text-yellow-500 italic">24,500,000</p></div>
-                                    <div className="glass p-10"><p className="text-[10px] text-gray-500 mb-2 uppercase tracking-widest font-bold">Active Guests</p><p className="text-3xl font-bold italic">14</p></div>
-                                    <div className="glass p-10"><p className="text-[10px] text-gray-500 mb-2 uppercase tracking-widest font-bold">New Orders</p><p className="text-3xl font-bold italic">03</p></div>
+                                    <button 
+                                        onClick={handleCheckout}
+                                        disabled={cart.length === 0}
+                                        className="w-full btn-gold py-4 rounded-sm text-xs"
+                                    >
+                                        Buyurtma berish
+                                    </button>
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </main>
 
-                    {/* Footer & Secret Gate */}
-                    <footer className="px-6 py-10 md:px-20 border-t border-white/5 flex justify-between items-center text-gray-700">
-                        <p className="text-[9px] tracking-widest uppercase italic">© 2026 Kamron Private Dining</p>
-                        <div onClick={() => setView('auth_gate')} className="w-1 h-1 bg-white/5 cursor-pointer hover:bg-yellow-600 transition-colors"></div>
+                    <footer className="p-10 text-center opacity-20 hover:opacity-100 transition-opacity">
+                        <p className="text-[9px] tracking-[0.5em] uppercase">© 2026 Kamron Haute Cuisine</p>
+                        <div onClick={() => setView('auth_gate')} className="w-1 h-1 bg-white/10 mx-auto mt-4 cursor-pointer"></div>
                     </footer>
                 </div>
             );
