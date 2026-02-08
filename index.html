@@ -3,147 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KAMRON | Premium System</title>
+    <title>KAMRON | Management System</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0a0a0a; color: white; overflow-x: hidden; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0a0a0a; color: white; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
         .gold-text { background: linear-gradient(90deg, #d4af37, #f2d06b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .input-premium { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; outline: none; border-radius: 4px; }
+        .input-premium { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; width: 100%; border-radius: 4px; outline: none; transition: 0.3s; }
         .input-premium:focus { border-color: #d4af37; }
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-btn { padding: 10px 20px; font-size: 11px; font-weight: bold; border-bottom: 2px solid transparent; transition: 0.3s; }
+        .tab-active { border-bottom-color: #d4af37; color: #d4af37; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
         const App = () => {
             const [view, setView] = useState('customer'); // customer, gate, login, panel
-            const [role, setRole] = useState('');
+            const [custTab, setCustTab] = useState('menu'); // menu, rooms
+            const [activeRole, setActiveRole] = useState('');
             const [pass, setPass] = useState('');
-            const [cart, setCart] = useState([]);
-            const [customer, setCustomer] = useState({ name: '', phone: '', address: '' });
+            
+            // Ma'lumotlar ombori (State)
+            const [products, setProducts] = useState([
+                { id: 1, name: "Wagyu A5 Steak", price: 850000, category: "Asosiy", image: "https://images.unsplash.com/photo-1544025162-d76694265947", status: "bor" },
+                { id: 2, name: "Truffle Pasta", price: 320000, category: "Pasta", image: "https://images.unsplash.com/photo-1626074353765-517a681e40be", status: "bor" },
+                { id: 3, name: "Black Caviar", price: 1200000, category: "Gazak", image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2", status: "bor" },
+                { id: 4, name: "Gold Dessert", price: 250000, category: "Desert", image: "https://images.unsplash.com/photo-1551024506-0bccd828d307", status: "yo'q" }
+            ]);
 
+            const [rooms, setRooms] = useState([
+                { id: 1, name: "VIP 1", status: "bo'sh" },
+                { id: 2, name: "VIP 2", status: "band" },
+                { id: 3, name: "Zal - 4 kishilik", status: "bo'sh" },
+                { id: 4, name: "Zal - 2 kishilik", status: "bo'sh" }
+            ]);
+
+            const [cart, setCart] = useState([]);
             const CODES = { GATE: "mx097aixom", manager: "189sidnetbosss", admin: "11wer9hk", courier: "buysel78ui" };
 
-            // 1. Darvoza kodini tekshirish
-            const checkGate = () => {
-                if (pass === CODES.GATE) { setView('login'); setPass(''); } 
-                else { alert("Darvoza kodi xato!"); }
+            // Admin Funksiyalari
+            const toggleProduct = (id) => {
+                setProducts(products.map(p => p.id === id ? {...p, status: p.status === 'bor' ? 'yo\'q' : 'bor'} : p));
             };
-
-            // 2. Rol parolini tekshirish
-            const checkLogin = () => {
-                if (pass === CODES[role]) { setView('panel'); setPass(''); } 
-                else { alert("Shaxsiy parol xato!"); }
+            const updatePrice = (id, newPrice) => {
+                setProducts(products.map(p => p.id === id ? {...p, price: Number(newPrice)} : p));
             };
 
             return (
-                <div className="min-h-screen flex flex-col">
-                    {/* Header */}
-                    <nav className="p-8 md:px-20 flex justify-between items-center border-b border-white/5 sticky top-0 bg-[#0a0a0a]/90 backdrop-blur-md z-50">
-                        <div onClick={() => setView('customer')} className="cursor-pointer">
-                            <h1 className="text-2xl font-black italic gold-text uppercase tracking-tighter">Kamron</h1>
-                        </div>
-                        <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">Premium Dining</div>
+                <div className="min-h-screen">
+                    {/* --- NAV BAR --- */}
+                    <nav className="p-6 md:px-20 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a]/90 sticky top-0 z-50">
+                        <h1 onClick={() => setView('customer')} className="text-2xl font-black italic gold-text uppercase cursor-pointer">Kamron</h1>
+                        {view === 'customer' && (
+                            <div className="flex space-x-6">
+                                <button onClick={() => setCustTab('menu')} className={`tab-btn ${custTab === 'menu' ? 'tab-active' : 'text-gray-500'}`}>MENYU</button>
+                                <button onClick={() => setCustTab('rooms')} className={`tab-btn ${custTab === 'rooms' ? 'tab-active' : 'text-gray-500'}`}>XONALAR</button>
+                            </div>
+                        )}
                     </nav>
 
-                    <main className="flex-grow p-6 md:px-20 py-12">
-                        {/* --- MIJOZ PANELI --- */}
+                    <main className="p-6 md:px-20 py-10">
+                        {/* 1. MIJOZ PANELI */}
                         {view === 'customer' && (
-                            <div className="grid lg:grid-cols-12 gap-12 fade-in">
-                                <div className="lg:col-span-7 space-y-8">
-                                    <h2 className="text-4xl font-light italic">Menyu</h2>
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        {[
-                                            {id: 1, name: "Wagyu Fillet", price: 850000, img: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=400"},
-                                            {id: 2, name: "Black Pasta", price: 420000, img: "https://images.unsplash.com/photo-1626074353765-517a681e40be?q=80&w=400"}
-                                        ].map(p => (
-                                            <div key={p.id} onClick={() => setCart([...cart, p])} className="glass p-4 rounded cursor-pointer hover:border-yellow-600 transition-all">
-                                                <img src={p.img} className="w-full h-40 object-cover mb-4 opacity-80" />
-                                                <div className="flex justify-between font-bold text-sm">
-                                                    <span>{p.name}</span>
-                                                    <span className="text-yellow-500">{p.price.toLocaleString()}</span>
+                            custTab === 'menu' ? (
+                                <div className="grid lg:grid-cols-12 gap-10">
+                                    <div className="lg:col-span-8 grid md:grid-cols-2 gap-8">
+                                        {products.map(p => (
+                                            <div key={p.id} className="glass p-4 group transition-all hover:border-yellow-600/50">
+                                                <div className="relative h-48 mb-4 overflow-hidden rounded">
+                                                    <img src={p.image} className={`w-full h-full object-cover transition-all ${p.status === 'yo\'q' ? 'grayscale opacity-30' : 'group-hover:scale-110'}`} />
+                                                    {p.status === 'yo\'q' && <span className="absolute inset-0 flex items-center justify-center font-bold text-xs uppercase tracking-widest">Tugagan</span>}
+                                                </div>
+                                                <div className="flex justify-between items-end">
+                                                    <div>
+                                                        <p className="text-[10px] text-yellow-600 font-bold uppercase tracking-widest">{p.category}</p>
+                                                        <h3 className="font-bold">{p.name}</h3>
+                                                    </div>
+                                                    <button onClick={() => p.status === 'bor' && setCart([...cart, p])} className="bg-white text-black text-[10px] font-bold px-4 py-2 hover:bg-yellow-500 transition-colors">
+                                                        {p.price.toLocaleString()} UZS
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
+                                    <div className="lg:col-span-4 space-y-6">
+                                        <div className="glass p-8 rounded-lg sticky top-32">
+                                            <h3 className="text-xs font-bold uppercase tracking-widest mb-6 text-yellow-500">Buyurtma Berish</h3>
+                                            <div className="space-y-3 mb-6">
+                                                <input className="input-premium" placeholder="Ismingiz" />
+                                                <input className="input-premium" placeholder="Telefon" />
+                                                <textarea className="input-premium h-20" placeholder="Manzil"></textarea>
+                                            </div>
+                                            <div className="border-t border-white/5 pt-4">
+                                                <p className="flex justify-between font-bold mb-6"><span>Jami:</span> <span className="text-xl text-yellow-500">{cart.reduce((a,b)=>a+b.price, 0).toLocaleString()} UZS</span></p>
+                                                <button className="w-full bg-yellow-600 py-4 text-black font-black text-[10px] uppercase tracking-widest">Tasdiqlash</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="lg:col-span-5">
-                                    <div className="glass p-8 rounded-lg sticky top-32 space-y-6">
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-yellow-600">Buyurtma berish</h3>
-                                        <div className="space-y-3">
-                                            <input placeholder="Ismingiz" className="input-premium" onChange={e => setCustomer({...customer, name: e.target.value})} />
-                                            <input placeholder="Telefon" className="input-premium" onChange={e => setCustomer({...customer, phone: e.target.value})} />
-                                            <textarea placeholder="Manzil" className="input-premium h-20" onChange={e => setCustomer({...customer, address: e.target.value})} />
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                    {rooms.map(r => (
+                                        <div key={r.id} className={`glass p-10 text-center border-2 ${r.status === 'band' ? 'border-red-900/50' : 'border-green-900/50'}`}>
+                                            <h3 className="text-xl font-bold mb-4">{r.name}</h3>
+                                            <span className={`text-[10px] uppercase font-bold px-3 py-1 rounded ${r.status === 'band' ? 'bg-red-500 text-white' : 'bg-green-500 text-black'}`}>{r.status}</span>
                                         </div>
-                                        <div className="border-t border-white/10 pt-4 flex justify-between font-bold">
-                                            <span>Jami:</span>
-                                            <span className="text-xl text-yellow-500">{cart.reduce((a,b)=>a+b.price, 0).toLocaleString()} UZS</span>
+                                    ))}
+                                </div>
+                            )
+                        )}
+
+                        {/* 2. ADMIN PANEL */}
+                        {view === 'panel' && activeRole === 'admin' && (
+                            <div className="space-y-8">
+                                <h2 className="text-2xl font-black gold-text uppercase">Taomlar Boshqaruvi</h2>
+                                <div className="grid gap-4">
+                                    {products.map(p => (
+                                        <div key={p.id} className="glass p-6 flex flex-wrap items-center justify-between gap-4">
+                                            <div className="flex items-center space-x-4">
+                                                <img src={p.image} className="w-16 h-16 object-cover rounded" />
+                                                <input className="bg-transparent border-b border-white/10 outline-none" defaultValue={p.name} />
+                                            </div>
+                                            <div className="flex items-center space-x-4">
+                                                <input className="bg-zinc-900 p-2 rounded w-32 text-yellow-500" defaultValue={p.price} onChange={(e) => updatePrice(p.id, e.target.value)} />
+                                                <button onClick={() => toggleProduct(p.id)} className={`px-4 py-2 text-[10px] font-bold uppercase rounded ${p.status === 'bor' ? 'bg-green-600' : 'bg-red-600'}`}>
+                                                    {p.status === 'bor' ? 'Sotuvda Bor' : 'Tugagan'}
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button className="w-full bg-yellow-600 text-black py-4 font-black uppercase text-[10px] tracking-widest hover:bg-yellow-500 transition-all" onClick={() => alert("Buyurtma qabul qilindi!")}>Tasdiqlash</button>
+                                    ))}
+                                    <button className="border-2 border-dashed border-white/10 p-4 hover:border-yellow-600/50 text-gray-500 uppercase text-[10px] font-bold">+ Yangi Taom Qo'shish</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 3. BOSHLIQ PANELI */}
+                        {view === 'panel' && activeRole === 'manager' && (
+                            <div className="space-y-8">
+                                <h2 className="text-2xl font-black gold-text uppercase">Moliyaviy Hisobot</h2>
+                                <div className="grid md:grid-cols-3 gap-6">
+                                    <div className="glass p-10 text-center"><p className="text-xs text-gray-500 uppercase mb-2">Tushum</p><p className="text-3xl font-bold italic">45,800,000 UZS</p></div>
+                                    <div className="glass p-10 text-center"><p className="text-xs text-gray-500 uppercase mb-2">Mijozlar</p><p className="text-3xl font-bold italic">124</p></div>
+                                    <div className="glass p-10 text-center"><p className="text-xs text-gray-500 uppercase mb-2">IP Nazorat</p><div className="text-[10px] text-left mt-4 text-gray-400">172.16.0.1 - iPhone 15<br/>192.168.1.1 - Mac OS</div></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. KURYER PANELI */}
+                        {view === 'panel' && activeRole === 'courier' && (
+                            <div className="space-y-6">
+                                <h2 className="text-2xl font-black gold-text uppercase">Yetkazib Berish</h2>
+                                <div className="glass p-6 space-y-4">
+                                    <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                                        <div>
+                                            <p className="font-bold">Mijoz: Jamshid Karimov</p>
+                                            <p className="text-xs text-gray-400">Tel: +998 90 123 45 67</p>
+                                            <p className="text-xs text-gray-400 italic">Manzil: Chilonzor 5-kv, 12-uy</p>
+                                        </div>
+                                        <button className="bg-yellow-600 text-black px-6 py-2 text-[10px] font-bold uppercase">Yakunlandi</button>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* --- 1-BOSQICH: DARVOZA --- */}
+                        {/* LOGIN MODALS */}
                         {view === 'gate' && (
-                            <div className="max-w-xs mx-auto py-32 text-center space-y-8 fade-in">
-                                <h2 className="text-[10px] font-bold uppercase tracking-[0.5em] text-gray-500">Security Gate</h2>
-                                <input type="password" autoFocus placeholder="GATE CODE" className="input-premium text-center tracking-[1em]" onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkGate()} />
-                                <button onClick={checkGate} className="text-[10px] font-bold border border-white/20 px-8 py-3 hover:bg-white hover:text-black">ENTER</button>
+                            <div className="max-w-xs mx-auto py-32 text-center space-y-6">
+                                <h2 className="text-[10px] uppercase tracking-[0.5em] text-gray-500">Security Gate</h2>
+                                <input type="password" autoFocus className="input-premium text-center tracking-[1em]" onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === 'Enter' && (pass === CODES.GATE ? (setView('login'), setPass('')) : alert('Xato'))} />
                             </div>
                         )}
-
-                        {/* --- 2-BOSQICH: LOGIN --- */}
                         {view === 'login' && (
-                            <div className="max-w-xs mx-auto py-32 text-center space-y-6 fade-in">
-                                <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-yellow-600">Select Role</h2>
-                                <select className="input-premium uppercase text-[10px] font-bold tracking-widest" onChange={e => setRole(e.target.value)}>
-                                    <option value="">Tanlang</option>
+                            <div className="max-w-xs mx-auto py-32 text-center space-y-6">
+                                <select className="input-premium uppercase text-[10px] font-bold" onChange={e => setActiveRole(e.target.value)}>
+                                    <option>Rolni Tanlang</option>
                                     <option value="manager">Boshliq</option>
                                     <option value="admin">Admin</option>
                                     <option value="courier">Kuryer</option>
                                 </select>
-                                <input type="password" placeholder="PASSWORD" className="input-premium text-center tracking-[0.5em]" onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkLogin()} />
-                                <button onClick={checkLogin} className="w-full bg-white text-black py-4 text-[10px] font-bold uppercase tracking-widest">Login</button>
-                            </div>
-                        )}
-
-                        {/* --- 3-BOSQICH: PANEL --- */}
-                        {view === 'panel' && (
-                            <div className="max-w-4xl mx-auto space-y-12 fade-in">
-                                <div className="flex justify-between items-end border-b border-white/10 pb-6">
-                                    <h2 className="text-2xl font-light italic uppercase tracking-tighter">{role} <span className="text-gray-600">Panel</span></h2>
-                                    <button onClick={() => setView('customer')} className="text-[10px] text-red-500 font-bold border border-red-500/20 px-6 py-2">EXIT</button>
-                                </div>
-                                <div className="grid md:grid-cols-3 gap-6">
-                                    <div className="glass p-8 text-center"><p className="text-[9px] text-gray-500 uppercase font-bold mb-2">Bugungi Tushum</p><p className="text-2xl font-bold text-yellow-500 italic">24,500,000</p></div>
-                                    <div className="glass p-8 text-center"><p className="text-[9px] text-gray-500 uppercase font-bold mb-2">Buyurtmalar</p><p className="text-2xl font-bold italic">12</p></div>
-                                    <div className="glass p-8 text-center"><p className="text-[9px] text-gray-500 uppercase font-bold mb-2">Status</p><p className="text-2xl font-bold text-green-500 italic">Online</p></div>
-                                </div>
+                                <input type="password" placeholder="PASSWORD" className="input-premium text-center tracking-[0.3em]" onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === 'Enter' && (pass === CODES[activeRole] ? (setView('panel'), setPass('')) : alert('Parol xato'))} />
                             </div>
                         )}
                     </main>
 
-                    {/* Footer & Maxfiy Nuqta */}
-                    <footer className="p-10 border-t border-white/5 flex flex-col items-center space-y-4 opacity-30 hover:opacity-100 transition-all">
-                        <p className="text-[8px] uppercase tracking-[0.5em] text-gray-600 italic">© 2026 Kamron Private System</p>
-                        {/* MANA SHU NUQTANI BOSING */}
-                        <div 
-                            onClick={() => { console.log("Gate triggered"); setView('gate'); }} 
-                            className="w-1 h-1 bg-white/20 cursor-pointer hover:bg-yellow-600"
-                            title="Admin Access"
-                        ></div>
+                    {/* Exit for Panels */}
+                    {view === 'panel' && <button onClick={() => setView('customer')} className="fixed bottom-10 right-10 bg-red-600 text-white px-6 py-3 font-bold text-xs uppercase rounded-full">Chiqish</button>}
+
+                    {/* Secret Point */}
+                    <footer className="p-10 border-t border-white/5 opacity-10 hover:opacity-100 transition-all text-center">
+                        <p className="text-[8px] uppercase tracking-[0.5em]">Kamron Group 2026</p>
+                        <div onClick={() => setView('gate')} className="w-1 h-1 bg-white/20 mx-auto mt-4 cursor-pointer hover:bg-yellow-600 transition-colors"></div>
                     </footer>
                 </div>
             );
