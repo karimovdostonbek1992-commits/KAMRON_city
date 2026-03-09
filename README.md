@@ -21,7 +21,7 @@ Loyiha **Vite** yordamida qurilgan. Uni kompyuteringizda yurgizish uchun:
 2.  **API Kalitni sozlash:**
     `.env.local` faylini oching va `GEMINI_API_KEY` qismiga o'z kalitingizni qo'ying:
     ```env
-    GEMINI_API_KEY=sizning_api_kalitingiz
+    GEMINI_API_KEY=AIzaSyADqOtw5JSLXHFIkBCJhTgIMPpMRGT-Ygk
     ```
 
 3.  **Dasturni yurgizish:**
