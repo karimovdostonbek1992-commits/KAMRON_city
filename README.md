@@ -1,42 +1,20 @@
-# 🍽️ KAMRON - Premium Restoran Tizimi
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Bu loyiha zamonaviy restoranlar uchun buyurtma berish, xona band qilish va sun'iy intellekt (Gemini AI) yordamida tahlil qilish imkoniyatini beruvchi veb-ilovadir.
+# Run and deploy your AI Studio app
 
-## ✨ Xususiyatlari
-* **Menu:** Taomlar ro'yxati va narxlari.
-* **Savatcha:** Taomlarni tanlash va buyurtma berish.
-* **Rezervatsiya:** Restorandan joy band qilish tizimi.
-* **AI Tahlil:** Gemini AI yordamida mijozlar so'rovlarini tahlil qilish.
-* **Admin Panel:** Buyurtmalarni boshqarish interfeysi.
+This contains everything you need to run your app locally.
 
-## 🚀 Ishga tushirish (Local Run)
+View your app in AI Studio: https://ai.studio/apps/03780900-f24e-4833-b4d3-7ff470778760
 
-Loyiha **Vite** yordamida qurilgan. Uni kompyuteringizda yurgizish uchun:
+## Run Locally
 
-1.  **Kutubxonalarni yuklash:**
-    ```bash
-    npm install
-    ```
+**Prerequisites:**  Node.js
 
-2.  **API Kalitni sozlash:**
-    `.env.local` faylini oching va `GEMINI_API_KEY` qismiga o'z kalitingizni qo'ying:
-    ```env
-    GEMINI_API_KEY=AIzaSyADqOtw5JSLXHFIkBCJhTgIMPpMRGT-Ygk
-    ```
 
-3.  **Dasturni yurgizish:**
-    ```bash
-    npm run dev
-    ```
-    Sayt odatda `http://localhost:3000` manzilida ochiladi.
-
-## 🛠️ Texnologiyalar
-* **Frontend:** HTML5, Tailwind CSS, JavaScript (Vanilla)
-* **Asboblar:** Vite.js
-* **AI:** Google Gemini API
-
-## 🌐 Internetga joylash
-Loyihani **Vercel** yoki **Netlify** platformalariga GitHub orqali oson ulanib, bepul joylash mumkin. Joylash vaqtida `GEMINI_API_KEY`ni Environment Variables qismiga qo'shishni unutmang.
-
----
-*Yaratuvchi: Kamron*
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
